@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  # New MySQL Database for the new WordPress site
+  new_db:
+    image: mysql:5.7
+    networks:
+      - my_network
+    volumes:
+      - new_db_data:/var/lib/mysql
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+
+  # New WordPress site
+  butterskin_wordpress:
+    depends_on:
+      - new_db
+    image: wordpress:latest
+    ports:
+      - "${WP_PORT}:80"
+    networks:
+      - my_network
+    restart: always
+    environment:
+      WORDPRESS_DB_HOST: new_db:3306          # Point to new MySQL container
+      WORDPRESS_DB_USER: ${MYSQL_USER}
+      WORDPRESS_DB_PASSWORD: ${MYSQL_PASSWORD}
+      WORDPRESS_DB_NAME: ${MYSQL_DATABASE}
+
+volumes:
+  new_db_data: {}                            # Volume for new WordPress database
+
+networks:
+  my_network:
+    external: true                           # Use the existing 'my_network' from the other setup
